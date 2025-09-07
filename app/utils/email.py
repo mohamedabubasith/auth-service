@@ -81,14 +81,16 @@ async def send_password_reset_email(to_email: str, reset_token: str, tenant_id: 
         
         # ✅ Use Resend with proper error handling
         print(f"🔄 Sending email to {to_email} via Resend...")
-        
-        # Use your exact syntax but with error handling
-        r = resend.Emails.send({
-            "from": "onboarding@resend.dev",  # ✅ Use verified sender
-            "to": [to_email],  # ✅ Must be array
+
+        params = {
+            "from": "Acme <onboarding@resend.dev>",
+            "to": [to_email],
             "subject": f"Password Reset Request - {tenant_name}",
             "html": html_content
-        })
+        }
+        
+        # Use your exact syntax but with error handling
+        r = resend.Emails.send(params)
         
         print(f"📧 Resend response: {r}")
         
