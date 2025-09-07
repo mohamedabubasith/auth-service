@@ -1,6 +1,19 @@
-import os, secrets
+import os, secrets, json
 from typing import List, Dict, Any
 from pydantic_settings import BaseSettings
+
+
+def get_cors_origins():
+    cors_raw = os.getenv("CORS_ORIGINS", "*")
+    if not cors_raw or cors_raw.strip() == "":
+        return ["*"]
+    
+    # Try to parse as JSON first
+    try:
+        return json.loads(cors_raw)
+    except:
+        # Fall back to comma-separated string
+        return [origin.strip() for origin in cors_raw.split(",") if origin.strip()]
 
 class Settings(BaseSettings):
     # MongoDB
@@ -36,7 +49,7 @@ class Settings(BaseSettings):
     RESET_URL: str = os.getenv("RESET_URL", "https://bug-free-space-orbit-q7g6jg65rqr7345wg-8000.app.github.dev")
     
     # CORS
-    CORS_ORIGINS: List[str] = os.getenv("CORS_ORIGINS", "*").split(",")
+    CORS_ORIGINS: List[str] = get_cors_origins()
     
     # Tenants Configuration
     TENANTS: Dict[str, Dict[str, Any]] = {
