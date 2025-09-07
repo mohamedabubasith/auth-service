@@ -4,7 +4,7 @@ from app.config import settings
 from app.core.tenant_manager import TenantManager
 
 # Initialize Resend with API key
-resend.api_key = os.getenv("RESEND_API_KEY")
+resend.api_key = "re_Y7wWD32x_Jj4qRj8oqBaYnwob7WqkcJPv"
 
 async def send_password_reset_email(to_email: str, reset_token: str, tenant_id: str):
     """Send password reset email using Resend (works on HF Spaces)"""
