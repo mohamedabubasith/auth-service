@@ -5,7 +5,7 @@ from app.config import settings
 from app.core.tenant_manager import TenantManager
 
 # Initialize SendGrid
-sg = SendGridAPIClient(api_key="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")
+sg = SendGridAPIClient(api_key=os.getenv('SENDGRID_API_KEY'))
 
 async def send_password_reset_email(to_email: str, reset_token: str, tenant_id: str):
     """Send password reset email using SendGrid"""
