@@ -1,18 +1,20 @@
-import aiosmtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import resend
+import os
 from app.config import settings
 from app.core.tenant_manager import TenantManager
 
+# Initialize Resend with API key
+resend.api_key = os.getenv("RESEND_API_KEY")
+
 async def send_password_reset_email(to_email: str, reset_token: str, tenant_id: str):
-    """Send password reset email with reset link"""
+    """Send password reset email using Resend (works on HF Spaces)"""
     
     # Get tenant info for personalization
     tenant_info = TenantManager.get_tenant_info(tenant_id)
     tenant_name = tenant_info.get("name", "Authentication Service")
     
-    # Create reset URL (adjust your frontend domain)
-    reset_url = f"${settings.RESET_URL}/static/reset-password.html?token={reset_token}&tenant={tenant_id}"
+    # ✅ Fixed reset URL
+    reset_url = f"{settings.API_BASE_URL}/static/reset-password.html?token={reset_token}&tenant={tenant_id}"
     
     # Create HTML email content
     html_content = f"""
@@ -76,26 +78,17 @@ async def send_password_reset_email(to_email: str, reset_token: str, tenant_id: 
     </html>
     """
     
-    # Create and send email
-    message = MIMEMultipart("alternative")
-    message["Subject"] = f"Password Reset Request - {tenant_name}"
-    message["From"] = settings.SMTP_USERNAME
-    message["To"] = to_email
-    
-    # Attach HTML content
-    html_part = MIMEText(html_content, "html")
-    message.attach(html_part)
-    
     try:
-        await aiosmtplib.send(
-            message,
-            hostname=settings.SMTP_SERVER,
-            port=settings.SMTP_PORT,
-            start_tls=True,
-            username=settings.SMTP_USERNAME,
-            password=settings.SMTP_PASSWORD,
-        )
-        print(f"✅ Password reset email sent to {to_email} for tenant {tenant_id}")
+        # ✅ Send via Resend HTTP API instead of SMTP
+        r = resend.Emails.send({
+            "from": "noreply@yourdomain.com",  # Replace with your verified domain
+            "to": to_email,
+            "subject": f"Password Reset Request - {tenant_name}",
+            "html": html_content
+        })
+        
+        print(f"✅ Password reset email sent via Resend to {to_email} for tenant {tenant_id}")
+        print(f"📧 Resend response: {r}")
         return True
         
     except Exception as e:
@@ -103,23 +96,18 @@ async def send_password_reset_email(to_email: str, reset_token: str, tenant_id: 
         return False
 
 async def send_email(to_email: str, subject: str, html_content: str):
-    """Generic email sending function"""
-    message = MIMEText(html_content, "html")
-    message["Subject"] = subject
-    message["From"] = settings.SMTP_USERNAME
-    message["To"] = to_email
-    
+    """Generic email sending function using Resend"""
     try:
-        await aiosmtplib.send(
-            message,
-            hostname=settings.SMTP_SERVER,
-            port=settings.SMTP_PORT,
-            start_tls=True,
-            username=settings.SMTP_USERNAME,
-            password=settings.SMTP_PASSWORD,
-        )
-        print(f"✅ Email sent to {to_email}")
+        r = resend.Emails.send({
+            "from": "noreply@yourdomain.com",  # Replace with your verified domain
+            "to": to_email,
+            "subject": subject,
+            "html": html_content
+        })
+        
+        print(f"✅ Email sent via Resend to {to_email}")
         return True
+        
     except Exception as e:
         print(f"❌ Failed to send email to {to_email}: {str(e)}")
         return False
