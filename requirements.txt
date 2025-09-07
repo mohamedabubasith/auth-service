@@ -14,4 +14,4 @@ slowapi
 beanie
 bcrypt
 aiosmtplib
-resend
+sendgrid
